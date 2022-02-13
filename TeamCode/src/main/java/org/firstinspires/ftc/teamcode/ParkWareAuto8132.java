@@ -6,6 +6,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.Range;
 
+@Disabled
 @Autonomous(name="Warehouse8132", group="Linear OpMode")
 
 public class ParkWareAuto8132 extends LinearOpMode {

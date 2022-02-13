@@ -5,6 +5,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.Range;
 
+@Disabled
 @TeleOp(name="FFTeleop8132", group="Linear Opmode")///This name will be on the drivers phone
 
 public class FFTeleop8132  extends LinearOpMode {/// SkystoneTeleop8132Price(your Team Number and Your Last Name)

@@ -4,7 +4,6 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.hardware.bosch.BNO055IMU;
 
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
-import org.firstinspires.ftc.robotcore.external.hardware.camera.SwitchableCamera;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.robotcore.external.navigation.Acceleration;
@@ -30,32 +29,38 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.tfod.TFObjectDetector;
 
 @Disabled
-public class FFHardware8132 {  /// SkystoneHard8132Price(your Team Number and Your Last Name)
 
-// ------------------------------
-// All variables define here 
-// ------------------------------
+public class FFHardware8188 { /// named the same as your file 
 
-    HardwareMap hwMap = null;  /// Motors
+    // ----------------------------
+    // All variables define here
+    // ----------------------------
+
+    HardwareMap hwMap=null; /// Motors
     public DcMotor leftfrontMotor = null;
     public DcMotor rightfrontMotor = null;
     public DcMotor leftbackMotor = null;
     public DcMotor rightbackMotor = null;
 
     public DcMotor rail;
-    int rail_up_pos = 100;
-    int rail_down_pos = 0;
+    //int railup_pos =100; //this number to make changes
+    //int railup_pos =0;
 
     public DcMotor duck;
 
     Servo claw = null;
     double claw_init =0.98;//makes adjustments to servo
-    double claw_close = 0.72; //makes adjustments to servo
+    double claw_close = 0.53; //makes adjustments to servo
     double claw_open = 0.98; //makes adjustments to servo
+
+    public int RAIL_INIT = 0;
+    public int RAIL_LEVEL_1 = 950;
+    public int RAIL_LEVEL_2 = 2570;
+    public int RAIL_LEVEL_3 = 4480;
 
     boolean clawIsClose = false;
 
-    // The IMU sensor detects which way the robot is going
+    // The IMU sensor detects which way the robot is
     BNO055IMU imu;
 
     // State used for updating telemetry
@@ -67,28 +72,25 @@ public class FFHardware8132 {  /// SkystoneHard8132Price(your Team Number and Yo
     public TFObjectDetector tfod;
 
     // To figure rotation 4in wheel x 3.14=12.56 divide that by 1120.
-    //(The number 1120 can be found the website Andy mark under motors-encoders)
+    // (The number 1120 can be found the website Andy mark under motors-encoders)
     //==89.7==89 clicks on the encoder = 1 Inch
 
     final static double COUNT_PER_ROTATION_40 = 1120; // neverest-40
     final static double COUNT_PER_INCH = COUNT_PER_ROTATION_40 / 12.56; // assume 4_inch wheels
 
-    public FFHardware8132(){}/// SkystoneHard8132Price(your Team Number and Your Last Name)
+    public FFHardware8188(){}
 
-    public void init(HardwareMap ahwMap){
-
-    //----------------------------------------------------------------------
-    // All hardware objects (motor, servo, sensors) initialize inside init()
-    //----------------------------------------------------------------------
-
+    public void init(HardwareMap ahwMap) {
+        //---------------------------------------------------------------------
+        //All hardware objects (motor, servo, sensors) initialize inside init()
+        //---------------------------------------------------------------------
         hwMap = ahwMap;
-
         ///Motors are used to run the robot
 
-        leftfrontMotor = hwMap.dcMotor.get("lf_drive");
-        rightfrontMotor = hwMap.dcMotor.get("rf_drive");
-        leftbackMotor = hwMap.dcMotor.get("lb_drive");
-        rightbackMotor = hwMap.dcMotor.get("rb_drive");
+        leftfrontMotor = hwMap.dcMotor.get("fl_drive");
+        rightfrontMotor = hwMap.dcMotor.get("fr_drive");
+        leftbackMotor = hwMap.dcMotor.get("bl_drive");
+        rightbackMotor = hwMap.dcMotor.get("br_drive");
 
         leftfrontMotor.setDirection(DcMotor.Direction.REVERSE);
         rightfrontMotor.setDirection(DcMotor.Direction.FORWARD);
@@ -118,21 +120,22 @@ public class FFHardware8132 {  /// SkystoneHard8132Price(your Team Number and Yo
 
         ///Mechanical Devices, arms, claws, shooters
 
-        ///rail
+         ///X-rail
         rail = hwMap.dcMotor.get("rail");
         rail.setPower(0);
         rail.setDirection(DcMotor.Direction.REVERSE);
         rail.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         rail.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-        ///Duck
+        ///duck
         duck = hwMap.dcMotor.get("duck");
         duck.setPower(0);
         duck.setDirection(DcMotor.Direction.REVERSE);
-        duck.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        duck.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        // duck.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        duck.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        duck.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        ///Claw Servo
+        ///Claw servo
         claw = hwMap.servo.get("claw");
         claw.setPosition(claw_init);
 
@@ -151,14 +154,11 @@ public class FFHardware8132 {  /// SkystoneHard8132Price(your Team Number and Yo
         imu = hwMap.get(BNO055IMU.class, "imu");
         imu.initialize(parameters);
 
-        // initialize TensorFlow
-        initTfod(hwMap);
-
     }// end of init()
 
     // all other routines here
 
-    public void driveMotors(double lp, double rp){
+    public void driveMotors(double lp, double rp) {
         leftfrontMotor.setPower(lp);
         rightfrontMotor.setPower(rp);
         leftbackMotor.setPower(lp);
@@ -183,7 +183,6 @@ public class FFHardware8132 {  /// SkystoneHard8132Price(your Team Number and Yo
         if(pow>0.0) l_target_count += dist_in * COUNT_PER_INCH;
         else l_target_count -= dist_in * COUNT_PER_INCH;
 
-
         driveMotors(0,0); ///Stop command
         leftfrontMotor.setTargetPosition((int)l_target_count);
         leftfrontMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
@@ -206,7 +205,7 @@ public class FFHardware8132 {  /// SkystoneHard8132Price(your Team Number and Yo
                     l_pow = pow * 0.9;
                 } else {
                     // slow down right motors
-                    r_pow = pow * 0.9;
+                    r_pow = pow *0.9;
                 }
             }
             driveMotors(l_pow, r_pow);
@@ -215,20 +214,33 @@ public class FFHardware8132 {  /// SkystoneHard8132Price(your Team Number and Yo
         leftfrontMotor.setPower(0);
         leftfrontMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
-    ///////////////////////////////////////////////////////////////
-    public void claw_open(){
+    ////////////////////////////////////////////////////////////////
+    public void claw_open() {  // 82-99 give information to figure out servo
         claw.setPosition(claw_open);
+        clawIsClose = false;
     }
 
-    public void claw_close() {  //82-99 give information to figure out servos
+    public void claw_close() { //82-99 give information to figure out servos
         claw.setPosition(claw_close);
+        clawIsClose = true;
+    }
 
+    public void clawToggle() {
+        if (clawIsClose)
+            claw_open();
+        else
+            claw_close();
+        try {
+            sleep(200);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     public void claw_inc() {
         double cur_pos = claw.getPosition();
         double tar_pos = cur_pos + 0.01;
-        if (tar_pos>1){
+        if (tar_pos>1) {
             tar_pos = 1;
         }
         claw.setPosition(tar_pos);
@@ -237,14 +249,14 @@ public class FFHardware8132 {  /// SkystoneHard8132Price(your Team Number and Yo
     public void claw_dec() {
         double cur_pos = claw.getPosition();
         double tar_pos = cur_pos - 0.01;
-        if (tar_pos<0){
+        if (tar_pos<0) {
             tar_pos = 0;
         }
         claw.setPosition(tar_pos);
     }
-    ////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////
 
-    ///rail
+    ///x-rail
     public void rail_up(double power) {
         rail.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         rail.setPower(power);
@@ -255,28 +267,35 @@ public class FFHardware8132 {  /// SkystoneHard8132Price(your Team Number and Yo
         rail.setPower(-1*power);
     }
 
-    public void rail_to_position(double power, int pos) {
-        duck.setTargetPosition(pos);
-        duck.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        duck.setPower(power);
-    }
-
-
     public void rail_stop() {
+        rail.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         rail.setPower(0);
     }
-    ///duck
-    public void duck_up(double power) {
-        duck.setPower(power);
+
+    public void rail_to_position(double power, int pos) {
+        rail.setTargetPosition(pos);
+        rail.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        rail.setPower(power);
     }
 
-    public void  duck_down(double power) {
-        duck.setPower(-1*power);
+    ///duck
+    public void duck_up(double speedUpratio) {
+        double duckPower = 0.5 + speedUpratio*0.5;
+        duck.setPower(duckPower);
+        // driveMotors(-0.1,-0.1);
+    }
+
+    public void  duck_down(double speedUpratio) {
+        double duckPower = 0.5 + speedUpratio*0.5;
+        duck.setPower(-1*duckPower);
+        // driveMotors(-0.1,-0.1);
     }
 
     public void duck_stop() {
         duck.setPower(0);
+        // driveMotors(0,0);
     }
+
     ///More information for the IMU sensor
 
     public double get_heading() {
@@ -345,7 +364,7 @@ public class FFHardware8132 {  /// SkystoneHard8132Price(your Team Number and Yo
             // to artificially zoom in to the center of image.  For best results, the "aspectRatio" argument
             // should be set to the value of the images used to create the TensorFlow Object Detection model
             // (typically 16/9).
-            tfod.setZoom(1.5, 16.0/9.0);
+            tfod.setZoom(1.5, 16.0 / 9.0);
         }
     }
-}// end of class FFHardware8132/// FFHardware8132(your Team Number 
+}// end of class SkyStoneHard8132/// SkystoneHard8132Price(your Team Number and Your Last Name)
